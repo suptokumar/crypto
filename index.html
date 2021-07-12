@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CoinCap API</title>
+	<!-- Bootstrap CDN -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<!-- Jquery CDN -->
+	<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+</head>
+<body>
+	<div class="container">
+		<header>
+			<h2>CoinCap Live API</h2>
+			<h3>I am using the first 5 Crypto to do the project.</h3>
+		</header>
+		<section>
+			<table class="table">
+				<tr>
+					<th>Rank</th>
+					<th>Name</th>
+					<th>Price</th>
+					<th>MarketCap</th>
+					<th>VWAP(24Hr)</th>
+					<th>Supply</th>
+					<th>Volume(24Hr)</th>
+					<th>Change(24Hr)</th>
+				</tr>
+				<tbody id="coinrange">
+				<tr>
+					<td colspan="8">
+					Loading...
+					</td>
+				</tr>
+				</tbody>
+			</table>
+<style>
+.green{
+	animation: green .4s;
+}
+.red {
+	animation: red .4s;
+}
+@keyframes red {
+	0%{
+		background: #FFBFB4;
+	}
+}
+@keyframes green {
+	0%{
+		background: #C1FBC1;
+	}
+}
+</style>
+			<script>
+// Create our number formatter.
+var formatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+formatter.format(2500); /* $2,500.00 */
+function apicall(){
+
+$.ajax({
+	url: 'https://api.coincap.io/v2/assets',
+	type: 'GET',
+	data: {ids: 'bitcoin,ethereum,monero,binance-coin,xrp'},
+})
+.done(function(data) {
+	let coin = data['data'];
+	console.log(coin);
+
+	let result = '';
+	for (var i = 0; i < coin.length; i++) {
+		let c = coin[i];
+		let previous_price = Number($("#price-"+c['symbol'].toLowerCase()).attr("title"));
+		let current_price = Number(c['priceUsd']);
+		let animation = '';
+		if(previous_price=="NaN" || previous_price == current_price)
+		{
+		// No animation
+		animation = '';
+
+		}else{
+
+		if (previous_price>current_price) {
+		animation = 'green';
+		}else{
+		animation = 'red';
+		}
+		}
+		result+=`
+		<tr class='coin-`+c['symbol'].toLowerCase()+` `+animation+`'>
+			<td>`+c['rank']+`</td>
+			<td><img style="float: left; padding: 10px" src="https://assets.coincap.io/assets/icons/`+c['symbol'].toLowerCase()+`@2x.png" alt=""><div><h3>`+c['name']+`</h3>`+c['symbol']+`</div></td>
+			<td id="price-`+c['symbol'].toLowerCase()+`" title='`+c['priceUsd']+`'>`+formatter.format(Number(c['priceUsd']))+`</td>
+			<td>`+formatter.format(Number(c['marketCapUsd'])/10000000000)+`B</td>
+			<td>`+formatter.format(Number(c['vwap24Hr']))+`</td>
+			<td>`+formatter.format(Number(c['supply']))+`</td>
+			<td>`+formatter.format(Number(c['volumeUsd24Hr'])/10000000000)+`B</td>
+			<td>`+Number(c['changePercent24Hr']).toFixed(2)+`%</td>
+		</tr>`;
+
+	$("#coinrange").html(result);
+	}
+})
+.fail(function() {
+	alert("Please check internet");
+})
+.always(function() {
+	console.log("complete");
+});
+}
+
+setInterval(function(){apicall();},3000);
+			</script>
+		</section>
+	</div>
+</body>
+</html>
